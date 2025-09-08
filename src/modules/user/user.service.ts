@@ -1,5 +1,8 @@
+// src/modules/user/user.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
+import { UserDto } from './dtos/user.dto';
 import { hash } from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -7,15 +10,21 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class UserService {
     constructor(private readonly prisma: PrismaService) {}
 
-    async create(data: CreateUserDto) {
-        // Hashear la contraseña antes de guardar el usuario
+    // Función de ayuda para mapear un objeto de Prisma a un UserDto seguro
+    private mapUserToDto(user: any): UserDto {
+        const { password, ...userDto } = user;
+        return userDto as UserDto;
+    }
+
+    async create(data: CreateUserDto): Promise<UserDto> {
         const hashedPassword = await hash(data.password, 10);
-        return this.prisma.user.create({
+        const newUser = await this.prisma.user.create({
             data: {
                 ...data,
                 password: hashedPassword,
             },
         });
+        return this.mapUserToDto(newUser);
     }
 
     async findByUsername(username: string) {
@@ -30,12 +39,12 @@ export class UserService {
         return user;
     }
 
-    async findById(id: number) {
+    async findById(id: number): Promise<UserDto> {
         const user = await this.prisma.user.findUnique({ where: { id } });
         if (!user) {
             throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
         }
-        return user;
+        return this.mapUserToDto(user);
     }
 
     async updatePassword(id: number, hashedPassword: string) {
@@ -43,5 +52,26 @@ export class UserService {
             where: { id },
             data: { password: hashedPassword },
         });
+    }
+
+    // Métodos adicionales para el UserController
+    async findAll(): Promise<UserDto[]> {
+        const users = await this.prisma.user.findMany();
+        return users.map((user) => this.mapUserToDto(user));
+    }
+
+    async update(id: number, data: UpdateUserDto): Promise<UserDto> {
+        if (data.password) {
+            data.password = await hash(data.password, 10);
+        }
+        const updatedUser = await this.prisma.user.update({
+            where: { id },
+            data,
+        });
+        return this.mapUserToDto(updatedUser);
+    }
+
+    async remove(id: number): Promise<void> {
+        await this.prisma.user.delete({ where: { id } });
     }
 }

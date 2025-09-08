@@ -1,3 +1,4 @@
+// src/modules/auth/guards/auth.guard.ts
 import {
     CanActivate,
     ExecutionContext,
@@ -6,26 +7,57 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { ConfigService } from 'src/config/config.service';
+import { ResponseStatus } from 'src/common/dtos/response.dto';
+import { AuthErrorCode } from '../dtos/response-auth.dto';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    constructor(private jwtService: JwtService) {}
+    constructor(
+        private jwtService: JwtService,
+        private configService: ConfigService,
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
+
         if (!token) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException({
+                status: ResponseStatus.ERROR,
+                message: 'No se proporcionó un token de autenticación.',
+                code: AuthErrorCode.NO_TOKEN,
+            });
         }
+
         try {
-            const payload = await this.jwtService.verifyAsync(
-                token,
-                // Aquí va el secreto del JWT, podrías obtenerlo del ConfigService
-                { secret: 'TU_SUPER_SECRETO_SEGURO_Y_LARGO' },
-            );
+            const payload = await this.jwtService.verifyAsync(token, {
+                secret: this.configService.jwtSecret,
+            });
             request['user'] = payload;
-        } catch {
-            throw new UnauthorizedException();
+        } catch (err: any) {
+            if (err.name === 'TokenExpiredError') {
+                throw new UnauthorizedException({
+                    status: ResponseStatus.ERROR,
+                    message:
+                        'Token expirado. Por favor, inicia sesión de nuevo.',
+                    code: AuthErrorCode.TOKEN_EXPIRED,
+                });
+            }
+            if (err.name === 'JsonWebTokenError') {
+                throw new UnauthorizedException({
+                    status: ResponseStatus.ERROR,
+                    message:
+                        'Token inválido. Por favor, inicia sesión de nuevo.',
+                    code: AuthErrorCode.INVALID_TOKEN,
+                });
+            }
+            throw new UnauthorizedException({
+                status: ResponseStatus.ERROR,
+                message:
+                    'Error de autenticación. Por favor, inicia sesión de nuevo.',
+                code: AuthErrorCode.AUTH_ERROR,
+            });
         }
         return true;
     }
