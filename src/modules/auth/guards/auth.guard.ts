@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { ConfigService } from 'src/config/config.service';
+import { ConfigService } from 'src/config/config.service'; // Se importa el servicio
 import { ResponseStatus } from 'src/common/dtos/response.dto';
 import { AuthErrorCode } from '../dtos/response-auth.dto';
 
@@ -15,7 +15,7 @@ import { AuthErrorCode } from '../dtos/response-auth.dto';
 export class AuthGuard implements CanActivate {
     constructor(
         private jwtService: JwtService,
-        private configService: ConfigService,
+        private configService: ConfigService, // Inyectamos el servicio
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
 
         try {
             const payload = await this.jwtService.verifyAsync(token, {
-                secret: this.configService.jwtSecret,
+                secret: this.configService.jwtSecret, // Usamos la propiedad del servicio
             });
             request['user'] = payload;
         } catch (err: any) {
