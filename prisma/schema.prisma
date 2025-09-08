@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+enum Role {
+    ADMIN
+    EMPLOYEE
+}
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+}
+
+model User {
+    id             Int      @id @default(autoincrement())
+    username       String   @unique @db.VarChar(50)
+    password       String   @db.VarChar(255)
+    name           String   @db.VarChar(255)
+    role           Role     @default(EMPLOYEE)
+    status        UserStatus @default(ACTIVE)  
+
+    // Relaciones
+    receivedServices Service[] @relation("ReceivedBy")
+    assignedServices Service[] @relation("AssignedTo")
+}
+
+model Client {
+    id           Int      @id @default(autoincrement())
+    name         String   @db.VarChar(255)
+    phoneNumber  String?  @db.VarChar(20)
+    companyName  String?  @db.VarChar(255)
+    isFrecuent   Boolean  @default(false)
+    createdAt    DateTime @default(now())
+    
+    // Relaciones
+    services     Service[]
+    sales        Sale[]
+
+    @@index([phoneNumber])
+    @@index([companyName])
+}
+
+model Product {
+    id           Int      @id @default(autoincrement())
+    name         String   @db.VarChar(255)
+    sku          String   @unique @db.VarChar(50)
+    stock        Int      @default(0)
+    price        Decimal  @db.Decimal(10, 2)
+    isPart       Boolean
+    
+    // Relaciones
+    serviceDetails ServiceDetail[]
+    saleItems      SaleItem[]
+}
+
+/// Tablas de Operaciones y Transacciones
+model Service {
+    folioNumber      String   @id @db.VarChar(50)
+    clientId         Int
+    receptionDate    DateTime
+    receivedById     Int
+    assignedToId     Int?
+    status           String   @default("Pending") @db.VarChar(50)
+    serviceReason    String   @db.Text
+    initialNotes     String?  @db.Text
+    cancellationReason String? @db.Text
+    onHoldReason     String?  @db.Text
+    completionDate   DateTime?
+    serviceSummary   String?  @db.Text
+    deliveredAt      DateTime?
+    
+    // Relaciones
+    client         Client        @relation(fields: [clientId], references: [id])
+    receivedBy     User          @relation("ReceivedBy", fields: [receivedById], references: [id])
+    assignedTo     User?         @relation("AssignedTo", fields: [assignedToId], references: [id])
+    serviceDetails ServiceDetail[]
+    sale           Sale?
+}
+
+model ServiceDetail {
+    id                 Int      @id @default(autoincrement())
+    serviceFolioNumber String   @db.VarChar(50)
+    productId          Int?
+    description        String   @db.VarChar(255)
+    quantity           Decimal  @db.Decimal(10, 2)
+    unitPrice          Decimal  @db.Decimal(10, 2)
+    
+    // Relaciones
+    service  Service? @relation(fields: [serviceFolioNumber], references: [folioNumber])
+    product  Product? @relation(fields: [productId], references: [id])
+}
+
+model Sale {
+    id                 Int      @id @default(autoincrement())
+    clientId           Int
+    saleDate           DateTime @default(now())
+    totalAmount        Decimal  @db.Decimal(10, 2)
+    paymentMethod      String   @db.VarChar(50)
+    serviceFolioNumber String?  @unique @db.VarChar(50)
+    
+    // Relaciones
+    client           Client       @relation(fields: [clientId], references: [id])
+    service          Service?     @relation(fields: [serviceFolioNumber], references: [folioNumber])
+    saleItems        SaleItem[]
+}
+
+model SaleItem {
+    id        Int      @id @default(autoincrement())
+    saleId    Int
+    productId Int
+    quantity  Int
+    unitPrice Decimal  @db.Decimal(10, 2)
+    
+    // Relaciones
+    sale      Sale      @relation(fields: [saleId], references: [id])
+    product   Product   @relation(fields: [productId], references: [id])
+}
