@@ -8,9 +8,11 @@ import {
     Param,
     Post,
     Put,
+    UseGuards,
 } from '@nestjs/common';
 import {
     ApiBadRequestResponse,
+    ApiBearerAuth,
     ApiBody,
     ApiCreatedResponse,
     ApiNotFoundResponse,
@@ -18,6 +20,7 @@ import {
     ApiOperation,
     ApiParam,
     ApiTags,
+    ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -27,13 +30,25 @@ import {
     ResponseUserObjDto,
 } from './dtos/response-user.dto';
 import { ResponseDto, ResponseStatus } from 'src/common/dtos/response.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'generated/prisma';
+import { ErrorAuthResponseDto } from '../auth/dtos/response-auth.dto';
 
 @ApiTags('Usuarios')
+@ApiBearerAuth()
+@UseGuards(AuthGuard, RolesGuard)
+@ApiUnauthorizedResponse({
+    description: 'Error de autenticacion o token invalido',
+    type: ErrorAuthResponseDto,
+})
 @Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @Post()
+    @Roles(Role.ADMIN) //Solo los administradores pueden registrar nuevos empleados
     @ApiOperation({
         summary: 'Crear un nuevo empleado',
         description: 'Registra un nuevo empleado en el sistema.',
@@ -55,6 +70,7 @@ export class UserController {
     }
 
     @Get()
+    @Roles(Role.ADMIN) //Solo los administradores pueden ver la lista de empleados
     @ApiOperation({
         summary: 'Obtener todos los empleados',
         description: 'Devuelve una lista de todos los empleados del sistema.',
@@ -73,6 +89,7 @@ export class UserController {
     }
 
     @Get(':id')
+    @Roles(Role.ADMIN) //Solo los administradores pueden ver los detalles de un empleado especifico
     @ApiOperation({
         summary: 'Obtener un empleado por ID',
         description:
@@ -98,6 +115,7 @@ export class UserController {
     }
 
     @Put(':id')
+    @Roles(Role.ADMIN) //solo los administradores pueden actualizar los datos de un empleado que no sea el mismo
     @ApiOperation({
         summary: 'Actualizar un empleado',
         description: 'Actualiza los datos de un empleado existente por su ID.',
@@ -125,6 +143,7 @@ export class UserController {
     }
 
     @Delete(':id')
+    @Roles(Role.ADMIN) //Solo los administradores pueden eliminar empleados
     @ApiOperation({
         summary: 'Eliminar (borrado lógico) un empleado',
         description: 'Elimina un empleado específico por su ID.',

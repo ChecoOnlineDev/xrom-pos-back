@@ -7,11 +7,12 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { ConfigModule } from 'src/config/config.module';
 import { AuthGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
     imports: [
         forwardRef(() => UserModule),
-        ConfigModule, // Usa tu ConfigModule personalizado
+        ConfigModule,
         NestConfigModule,
         JwtModule.registerAsync({
             imports: [NestConfigModule],
@@ -23,7 +24,7 @@ import { AuthGuard } from './guards/auth.guard';
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, AuthGuard],
+    providers: [AuthService, AuthGuard, RolesGuard],
     exports: [AuthService, AuthGuard, JwtModule],
 })
 export class AuthModule {}
