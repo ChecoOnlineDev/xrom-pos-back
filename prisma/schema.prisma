@@ -66,20 +66,31 @@ model Product {
     saleItems      SaleItem[]
 }
 
+enum ServiceStatus {
+    PENDING
+    IN_PROGRESS
+    ON_HOLD
+    COMPLETED
+    DELIVERED
+    CANCELED
+}
+
+
+
 /// Tablas de Operaciones y Transacciones
 model Service {
-    folioNumber      String   @id @db.VarChar(50)
+    folioNumber      String        @id @db.VarChar(50)
     clientId         Int
     receptionDate    DateTime
     receivedById     Int
     assignedToId     Int?
-    status           String   @default("Pending") @db.VarChar(50)
-    serviceReason    String   @db.Text
-    initialNotes     String?  @db.Text
-    cancellationReason String? @db.Text
-    onHoldReason     String?  @db.Text
+    status           ServiceStatus @default(PENDING) 
+    serviceReason    String        @db.Text
+    initialNotes     String?       @db.Text
+    cancellationReason String?     @db.Text
+    onHoldReason     String?       @db.Text
     completionDate   DateTime?
-    serviceSummary   String?  @db.Text
+    serviceSummary   String?       @db.Text
     deliveredAt      DateTime?
     
     // Relaciones
