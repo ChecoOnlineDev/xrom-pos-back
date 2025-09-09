@@ -32,16 +32,6 @@ export class AuthService {
             });
         }
 
-        // Validar que no sea un usuario con rol 'EMPLOYEE' para el login
-        if (user.role === Role.EMPLOYEE) {
-            // Ajuste del rol segun tu esquema 'EMPLOYEE'
-            throw new UnauthorizedException({
-                status: ResponseStatus.ERROR,
-                message:
-                    'Los usuarios con perfil EMPLEADO no pueden iniciar sesión por esta vía', // Podrías ajustar este mensaje
-            });
-        }
-
         // Comparar la contraseña hasheada
         if (!(await compare(password, user.password))) {
             throw new UnauthorizedException({

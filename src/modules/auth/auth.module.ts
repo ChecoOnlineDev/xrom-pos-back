@@ -1,19 +1,18 @@
-// src/modules/auth/auth.module.ts
 import { Module, forwardRef } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from 'src/modules/user/user.module';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule as NestConfigModule } from '@nestjs/config'; // Renombra para evitar conflictos
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
-import { ConfigModule } from 'src/config/config.module'; // Importa tu módulo de configuración
+import { ConfigModule } from 'src/config/config.module';
 import { AuthGuard } from './guards/auth.guard';
 
 @Module({
     imports: [
         forwardRef(() => UserModule),
         ConfigModule, // Usa tu ConfigModule personalizado
-        NestConfigModule, // Si aún necesitas el módulo global, renómbralo
+        NestConfigModule,
         JwtModule.registerAsync({
             imports: [NestConfigModule],
             inject: [ConfigService],

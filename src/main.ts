@@ -29,7 +29,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
         .setTitle('API de Gestión de Taller')
         .setDescription(
-            'API para la gestión de servicios, clientes y ventas de un taller.',
+            'API para la gestión de servicios, clientes y ventas de XROM SYSTEMS.',
         )
         .setVersion('1.0')
         .addBearerAuth() // Añadir soporte para tokens JWT
@@ -42,7 +42,7 @@ async function bootstrap() {
 
     // Configuración de CORS
     app.enableCors({
-        origin: ['http://localhost:5173', ''], // Reemplaza con la URL de tu frontend
+        origin: ['http://localhost:5173', ''],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
