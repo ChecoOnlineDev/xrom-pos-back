@@ -22,12 +22,13 @@ export class ClientService {
             }
         }
 
-        // 2. Si no se encontró por teléfono, buscar por nombre completo
+        // 2. Si no se encontró por teléfono, buscar por nombre completo (ajustado para MySQL)
+        // La consulta con "contains" no es case-sensitive en MySQL por defecto
+        // y es una forma de realizar una "búsqueda inteligente".
         client = await this.prisma.client.findFirst({
             where: {
                 fullName: {
-                    equals: data.fullName,
-                    mode: 'insensitive', //que ignore mayusculas y minusculas y se centre en que la cadena sea correcta
+                    contains: data.fullName,
                 },
             },
         });

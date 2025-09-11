@@ -151,6 +151,8 @@ importers:
         specifier: ^8.20.0
         version: 8.42.0(eslint@9.35.0(jiti@2.5.1))(typescript@5.9.2)
 
+  generated/prisma: {}
+
 packages:
 
   '@angular-devkit/core@19.2.15':
