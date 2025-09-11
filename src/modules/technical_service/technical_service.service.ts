@@ -1,3 +1,5 @@
+// Ruta: src/modules/technical_service/technical_service.service.ts
+
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ClientService } from '../client/client.service';
@@ -15,20 +17,18 @@ export class TechnicalServiceService {
         createServiceDto: CreateTechnicalServiceDto,
         userId: number,
     ): Promise<Service> {
-        //Utilizamos el metodo del modulo client para buscar o crear un cliente
-        const client = await this.clientService.findOrCreate(
+        // Usamos el nuevo método findOrCreateForService
+        const client = await this.clientService.findOrCreateForService(
             createServiceDto.client,
         );
 
-        //Creamos un folio unico que identifique el servicio tecnico
         const folioNumber = `SRV-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-        // Crear el servicio con el cliente ya registrado
         return this.prisma.service.create({
             data: {
                 folioNumber,
                 clientId: client.id,
-                receivedById: userId, // Corregido: usa el campo correcto
+                receivedById: userId,
                 receptionDate: new Date(),
                 serviceReason: createServiceDto.serviceReason,
                 initialNotes: createServiceDto.initialNotes,

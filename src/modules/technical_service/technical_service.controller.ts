@@ -50,10 +50,21 @@ export class TechnicalServiceController {
                 userId,
             );
 
+        const serviceData = {
+            ...newService,
+            assignedToId: newService.assignedToId ?? undefined,
+            initialNotes: newService.initialNotes ?? undefined,
+            cancellationReason: newService.cancellationReason ?? undefined,
+            onHoldReason: newService.onHoldReason ?? undefined,
+            completionDate: newService.completionDate ?? undefined,
+            serviceSummary: newService.serviceSummary ?? undefined,
+            deliveredAt: newService.deliveredAt ?? undefined,
+        };
+
         return {
             status: ResponseStatus.SUCCESS,
             message: 'Servicio técnico registrado exitosamente.',
-            data: { ...newService },
+            data: serviceData,
         };
     }
 }

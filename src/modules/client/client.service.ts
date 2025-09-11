@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+// Ruta: src/modules/client/client.service.ts
+
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClientDto } from './dtos/create-client.dto';
 import { UpdateClientDto } from './dtos/update-client.dto';
@@ -8,9 +10,47 @@ import { Client } from 'generated/prisma';
 export class ClientService {
     constructor(private prisma: PrismaService) {}
 
-    // Lógica principal: Buscar cliente por nombre completo o teléfono
+    // Este método es para el controlador de clientes, lanza un error si el teléfono existe
     async findOrCreate(data: CreateClientDto): Promise<Client> {
-        let client: Client | null;
+        // 1. Intentar buscar por número de teléfono si se proporciona
+        if (data.phoneNumber) {
+            const client = await this.prisma.client.findFirst({
+                where: { phoneNumber: data.phoneNumber },
+            });
+            if (client) {
+                // Modificación: Lanzar una excepción si el cliente ya existe con ese número
+                throw new BadRequestException(
+                    'El número de teléfono ya está asociado a otro cliente.',
+                );
+            }
+        }
+
+        // 2. Si no se encontró por teléfono, buscar por nombre completo
+        const clientByFullName = await this.prisma.client.findFirst({
+            where: {
+                fullName: { contains: data.fullName },
+            },
+        });
+
+        // 3. Si no se encuentra, crear un nuevo cliente
+        if (!clientByFullName) {
+            return await this.prisma.client.create({
+                data: {
+                    fullName: data.fullName,
+                    phoneNumber: data.phoneNumber,
+                    companyName: data.companyName,
+                    isFrecuent: data.isFrecuent,
+                },
+            });
+        }
+
+        // Si el cliente existe por nombre pero no por teléfono, lo retornamos
+        return clientByFullName;
+    }
+
+    // NUEVO MÉTODO: Dedicado al flujo de servicios, no lanza errores si el cliente existe
+    async findOrCreateForService(data: CreateClientDto): Promise<Client> {
+        let client: Client | null = null;
 
         // 1. Intentar buscar por número de teléfono si se proporciona
         if (data.phoneNumber) {
@@ -22,20 +62,16 @@ export class ClientService {
             }
         }
 
-        // 2. Si no se encontró por teléfono, buscar por nombre completo (ajustado para MySQL)
-        // La consulta con "contains" no es case-sensitive en MySQL por defecto
-        // y es una forma de realizar una "búsqueda inteligente".
+        // 2. Si no se encontró por teléfono, buscar por nombre completo
         client = await this.prisma.client.findFirst({
             where: {
-                fullName: {
-                    contains: data.fullName,
-                },
+                fullName: { contains: data.fullName },
             },
         });
 
         // 3. Si no se encuentra, crear un nuevo cliente
         if (!client) {
-            client = await this.prisma.client.create({
+            return await this.prisma.client.create({
                 data: {
                     fullName: data.fullName,
                     phoneNumber: data.phoneNumber,
@@ -44,6 +80,8 @@ export class ClientService {
                 },
             });
         }
+
+        // Si se encontró, retornarlo
         return client;
     }
 
