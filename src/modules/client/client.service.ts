@@ -25,14 +25,12 @@ export class ClientService {
             }
         }
 
-        // 2. Si no se encontró por teléfono, buscar por nombre completo
         const clientByFullName = await this.prisma.client.findFirst({
             where: {
                 fullName: { contains: data.fullName },
             },
         });
 
-        // 3. Si no se encuentra, crear un nuevo cliente
         if (!clientByFullName) {
             return await this.prisma.client.create({
                 data: {
@@ -44,60 +42,72 @@ export class ClientService {
             });
         }
 
-        // Si el cliente existe por nombre pero no por teléfono, lo retornamos
         return clientByFullName;
     }
 
-    // NUEVO MÉTODO: Dedicado al flujo de servicios, no lanza errores si el cliente existe
     async findOrCreateForService(data: CreateClientDto): Promise<Client> {
         let client: Client | null = null;
 
-        // 1. Intentar buscar por número de teléfono si se proporciona
+        // 1. Prioridad: Buscar por número de teléfono
         if (data.phoneNumber) {
             client = await this.prisma.client.findFirst({
                 where: { phoneNumber: data.phoneNumber },
             });
+
             if (client) {
+                // Si encontramos una coincidencia por teléfono, verificamos el nombre.
+                if (client.fullName === data.fullName || !data.fullName) {
+                    // El nombre coincide o no se proporcionó un nombre nuevo, reutilizamos el cliente.
+                    return client;
+                } else {
+                    // El nombre no coincide, asumimos que es un cliente diferente.
+                    // Creamos uno nuevo para mantener la integridad de los datos.
+                    return await this.prisma.client.create({
+                        data: {
+                            fullName: data.fullName,
+                            phoneNumber: data.phoneNumber,
+                            companyName: data.companyName,
+                            isFrecuent: data.isFrecuent,
+                        },
+                    });
+                }
+            }
+        }
+
+        // 2. Si no se encontró por teléfono, buscamos por nombre completo (si se proporciona)
+        if (!client && data.fullName) {
+            client = await this.prisma.client.findFirst({
+                where: {
+                    fullName: { contains: data.fullName },
+                },
+            });
+            if (client) {
+                // Si encontramos una coincidencia por nombre, asociamos el servicio a este cliente
                 return client;
             }
         }
 
-        // 2. Si no se encontró por teléfono, buscar por nombre completo
-        client = await this.prisma.client.findFirst({
-            where: {
-                fullName: { contains: data.fullName },
+        // 3. Si no hay coincidencias por teléfono ni nombre, se crea un nuevo cliente
+        return await this.prisma.client.create({
+            data: {
+                fullName: data.fullName,
+                phoneNumber: data.phoneNumber,
+                companyName: data.companyName,
+                isFrecuent: data.isFrecuent,
             },
         });
-
-        // 3. Si no se encuentra, crear un nuevo cliente
-        if (!client) {
-            return await this.prisma.client.create({
-                data: {
-                    fullName: data.fullName,
-                    phoneNumber: data.phoneNumber,
-                    companyName: data.companyName,
-                    isFrecuent: data.isFrecuent,
-                },
-            });
-        }
-
-        // Si se encontró, retornarlo
-        return client;
     }
 
-    // Método para obtener todos los clientes
     async findAll(): Promise<Client[]> {
         return this.prisma.client.findMany();
     }
 
-    // Método para buscar un cliente por ID
     async findById(id: number): Promise<Client | null> {
         return this.prisma.client.findUnique({
             where: { id },
         });
     }
 
-    // Método para actualizar un cliente
     async update(id: number, data: UpdateClientDto): Promise<Client> {
         return this.prisma.client.update({
             where: { id },

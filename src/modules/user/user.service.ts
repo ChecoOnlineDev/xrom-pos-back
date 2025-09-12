@@ -5,6 +5,7 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { UserDto } from './dtos/user.dto';
 import { hash } from 'bcryptjs';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { serializeDates } from '@/common/utils/serialize-date.util';
 
 @Injectable()
 export class UserService {
@@ -13,7 +14,7 @@ export class UserService {
     // Función de ayuda para mapear un objeto de Prisma a un UserDto seguro
     private mapUserToDto(user: any): UserDto {
         const { password, ...userDto } = user;
-        return userDto as UserDto;
+        return serializeDates(userDto) as UserDto;
     }
 
     async create(data: CreateUserDto): Promise<UserDto> {

@@ -15,7 +15,7 @@ export class ServiceEntity {
     receivedById: number;
 
     @ApiPropertyOptional()
-    assignedToId?: number;
+    assignedToId?: number | null;
 
     @ApiProperty({ enum: ServiceStatus })
     status: ServiceStatus;
@@ -24,20 +24,19 @@ export class ServiceEntity {
     serviceReason: string;
 
     @ApiPropertyOptional()
-    initialNotes?: string;
+    initialNotes?: string | null;
+    @ApiPropertyOptional()
+    cancellationReason?: string | null;
 
     @ApiPropertyOptional()
-    cancellationReason?: string;
+    onHoldReason?: string | null;
 
     @ApiPropertyOptional()
-    onHoldReason?: string;
+    completionDate?: Date | null;
 
     @ApiPropertyOptional()
-    completionDate?: Date;
+    serviceSummary?: string | null;
 
     @ApiPropertyOptional()
-    serviceSummary?: string;
-
-    @ApiPropertyOptional()
-    deliveredAt?: Date;
+    deliveredAt?: Date | null;
 }

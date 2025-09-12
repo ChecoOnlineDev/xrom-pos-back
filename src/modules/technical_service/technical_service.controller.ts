@@ -1,3 +1,5 @@
+// Ruta: src/modules/technical_service/technical_service.controller.ts
+
 import {
     Body,
     Controller,
@@ -20,7 +22,6 @@ import {
 } from '@nestjs/swagger';
 import { ResponseStatus } from 'src/common/dtos/response.dto';
 import { CreateServiceResponseDto } from './dtos/response-technical-service.dto';
-import { ServiceEntity } from './entities/service.entity';
 
 @ApiTags('Servicios Técnicos')
 @ApiBearerAuth()
@@ -50,21 +51,10 @@ export class TechnicalServiceController {
                 userId,
             );
 
-        const serviceData = {
-            ...newService,
-            assignedToId: newService.assignedToId ?? undefined,
-            initialNotes: newService.initialNotes ?? undefined,
-            cancellationReason: newService.cancellationReason ?? undefined,
-            onHoldReason: newService.onHoldReason ?? undefined,
-            completionDate: newService.completionDate ?? undefined,
-            serviceSummary: newService.serviceSummary ?? undefined,
-            deliveredAt: newService.deliveredAt ?? undefined,
-        };
-
         return {
             status: ResponseStatus.SUCCESS,
             message: 'Servicio técnico registrado exitosamente.',
-            data: serviceData,
+            data: newService,
         };
     }
 }

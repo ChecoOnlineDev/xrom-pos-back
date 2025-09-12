@@ -19,7 +19,7 @@ import { RolesGuard } from './guards/roles.guard';
             inject: [ConfigService],
             useFactory: async (configService: ConfigService) => ({
                 secret: configService.get<string>('secretJwt'),
-                signOptions: { expiresIn: '10h' },
+                signOptions: { expiresIn: '15m' },
             }),
         }),
     ],
